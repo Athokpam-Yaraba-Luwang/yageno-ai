@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+jinja2
+mangum>=0.17.0
+boto3

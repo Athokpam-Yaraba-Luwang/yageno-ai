@@ -1,0 +1,608 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (C) 2026 Athokpam Yaraba Luwang
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/* ---------- Panel: phones = full-screen sheet from the right, desktop = a view in the main area ---------- */
+.gc-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: 100%;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform .32s var(--ease, cubic-bezier(.4, 0, .2, 1)), visibility .32s;
+    will-change: transform;
+}
+
+.gc-panel.show {
+    transform: none;
+    visibility: visible;
+}
+
+@media (min-width: 900px) {
+    .gc-panel {
+        left: var(--sw);
+        right: 0;
+        width: auto;
+        z-index: 25;
+        transform: none;
+        opacity: 0;
+        transition: opacity .25s, visibility .25s, left .32s var(--ease, cubic-bezier(.4, 0, .2, 1));
+    }
+
+    .gc-panel.show {
+        opacity: 1;
+    }
+}
+
+.gc-top {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 56px;
+    padding: 0 12px 0 20px;
+    flex-shrink: 0;
+}
+
+.gc-title {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.gc-title h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.gc-title small {
+    display: block;
+    color: var(--muted);
+    font-size: .78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#gc-close {
+    margin-left: 4px;
+}
+
+/* ---------- Feed ---------- */
+.gc-feed {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px 20px 12px;
+    scrollbar-width: thin;
+}
+
+.gc-feed>* {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.gc-row {
+    margin: 14px auto;
+    animation: rise .3s ease-out both;
+}
+
+.gc-day {
+    margin-top: 18px;
+    margin-bottom: 4px;
+    text-align: center;
+    color: var(--muted);
+    font-size: .76rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.gc-who {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 3px;
+    font-size: .8rem;
+    color: var(--muted);
+}
+
+.gc-who b {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.gc-who time,
+.gc-pill time,
+.gc-auto-head time {
+    font-size: .72rem;
+    color: var(--muted);
+    opacity: .85;
+    font-variant-numeric: tabular-nums;
+}
+
+.gc-at {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.gc-at.me {
+    background: var(--soft);
+    border-radius: 6px;
+    padding: 0 4px;
+}
+
+/* ---------- People ---------- */
+.gc-user {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.gc-user.mine {
+    align-items: flex-end;
+}
+
+.gc-user.mine .gc-who {
+    flex-direction: row-reverse;
+}
+
+.gc-bubble {
+    max-width: min(86%, 560px);
+    padding: 10px 14px;
+    border-radius: 18px 18px 18px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+.gc-user.mine .gc-bubble {
+    background: var(--user);
+    border-color: transparent;
+    border-radius: 18px 18px 6px 18px;
+}
+
+.gc-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+    font-size: .76rem;
+    color: var(--muted);
+}
+
+.gc-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.gc-state svg {
+    width: 13px;
+    height: 13px;
+}
+
+.gc-state i {
+    font-style: normal;
+}
+
+.gc-state.pend {
+    color: var(--muted);
+}
+
+.gc-state.work {
+    color: var(--accent);
+}
+
+.gc-state.team {
+    color: var(--muted);
+}
+
+.gc-retract {
+    padding: 2px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: .76rem;
+    font-weight: 600;
+    background: var(--surface);
+    transition: background .2s, border-color .2s;
+}
+
+.gc-retract:disabled {
+    opacity: .5;
+}
+
+.gc-dots {
+    display: inline-flex;
+    gap: 3px;
+}
+
+.gc-dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: bounce 1.2s infinite ease-in-out;
+}
+
+.gc-dots i:nth-child(2) {
+    animation-delay: .15s;
+}
+
+.gc-dots i:nth-child(3) {
+    animation-delay: .3s;
+}
+
+/* ---------- The AI: full width, no bubble (same as the personal chat) ---------- */
+.gc-ai {
+    overflow-wrap: anywhere;
+}
+
+.gc-md {
+    line-height: 1.6;
+}
+
+.gc-busy .thinking {
+    margin-top: 2px;
+}
+
+/* ---------- Notices in the middle ---------- */
+.gc-sys {
+    display: flex;
+    justify-content: center;
+    margin: 10px auto;
+}
+
+.gc-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 6px 12px;
+    border-radius: 99px;
+    background: var(--soft);
+    color: var(--text);
+    font-size: .84rem;
+    line-height: 1.35;
+}
+
+.gc-pill-ic {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--accent);
+}
+
+.gc-pill-ic svg {
+    width: 14px;
+    height: 14px;
+}
+
+.gc-pill-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Automated decision card ---------- */
+.gc-autoRow {
+    display: flex;
+    justify-content: center;
+}
+
+.gc-auto {
+    width: min(100%, 560px);
+    padding: 12px 14px 10px;
+    border-radius: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    box-shadow: var(--shadow);
+}
+
+.gc-auto-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.gc-auto-tag {
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.gc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.gc-chip {
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: .76rem;
+    font-weight: 600;
+    background: var(--soft);
+    color: var(--text);
+}
+
+.gc-chip.warn {
+    background: rgba(224, 96, 90, .14);
+    color: #c0443d;
+}
+
+[data-theme$="dark"] .gc-chip.warn,
+[data-theme*="dark"] .gc-chip.warn {
+    color: #ff8f88;
+}
+
+.gc-auto-do {
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 1.02rem;
+}
+
+.gc-auto-do b,
+.gc-auto-why b {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: .92rem;
+}
+
+.gc-auto-why {
+    margin-top: 4px;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.gc-auto-why b {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.gc-auto-src {
+    margin-top: 8px;
+    font-size: .74rem;
+    color: var(--muted);
+}
+
+/* ---------- Empty state ---------- */
+.gc-empty {
+    margin-top: 12vh;
+    text-align: center;
+    color: var(--muted);
+}
+
+.gc-empty-ic {
+    display: inline-flex;
+    width: 52px;
+    height: 52px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--soft);
+    color: var(--accent);
+}
+
+.gc-empty-ic svg {
+    width: 24px;
+    height: 24px;
+}
+
+.gc-empty h3 {
+    margin: 12px 0 4px;
+    color: var(--text);
+    font-size: 1.05rem;
+}
+
+.gc-empty p {
+    max-width: 340px;
+    margin: 0 auto;
+    font-size: .92rem;
+    line-height: 1.5;
+}
+
+/* ---------- Jump to latest ---------- */
+.gc-jump {
+    position: absolute;
+    left: 50%;
+    bottom: 118px;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px 7px 10px;
+    border-radius: 99px;
+    background: var(--accent);
+    color: var(--on-accent, #fff);
+    font-size: .82rem;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+    z-index: 2;
+}
+
+.gc-jump[hidden] {
+    display: none;
+}
+
+.gc-jump svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ---------- Composer ---------- */
+.gc-foot {
+    flex-shrink: 0;
+    padding: 6px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+.gc-foot>* {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.gc-composer {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 8px 8px 8px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    transition: border-color .2s, background .2s;
+}
+
+.gc-composer:focus-within {
+    border-color: var(--accent);
+}
+
+/* team-only: the whole box changes so nobody sends one by mistake */
+.gc-composer.team {
+    border-style: dashed;
+    border-color: var(--muted);
+    background: var(--bg);
+}
+
+.gc-ai-toggle {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: var(--accent);
+    background: var(--soft);
+    transition: background .2s, color .2s;
+}
+
+.gc-ai-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.gc-ai-toggle[aria-pressed="false"] {
+    color: var(--muted);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--border);
+}
+
+#gc-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+    line-height: 1.5;
+    padding: 8px 6px;
+    max-height: 160px;
+}
+
+#gc-input::placeholder {
+    color: var(--muted);
+}
+
+.gc-send {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent, #fff);
+    transition: background .2s, opacity .2s, transform .15s;
+}
+
+.gc-send svg {
+    width: 20px;
+    height: 20px;
+}
+
+.gc-send:disabled {
+    opacity: .45;
+}
+
+.gc-send:active {
+    transform: scale(.94);
+}
+
+.gc-hint {
+    margin-top: 6px;
+    text-align: center;
+    font-size: .74rem;
+    color: var(--muted);
+}
+
+.gc-composer.team+.gc-hint {
+    color: var(--text);
+}
+
+.gc-panel {
+    /* so .gc-jump can sit above the composer */
+    overflow: hidden;
+}
+
+@media (hover: hover) {
+    .gc-retract:hover:not(:disabled) {
+        background: var(--soft);
+        border-color: var(--accent);
+    }
+
+    .gc-ai-toggle:hover {
+        background: var(--soft);
+    }
+
+    .gc-send:hover:not(:disabled) {
+        background: var(--accent-h, var(--accent));
+    }
+}
+
+/* ---------- Alerts (flame, birds, fence, offline, heat) stand out from routine notices ---------- */
+.gc-sys.alert .gc-pill {
+    background: rgba(224, 96, 90, .13);
+    box-shadow: inset 0 0 0 1px rgba(224, 96, 90, .35);
+    font-weight: 600;
+}
+
+.gc-sys.alert .gc-pill-ic {
+    color: #d1453f;
+}
+
+[data-theme^="dark"] .gc-sys.alert .gc-pill-ic {
+    color: #ff8f88;
+}
+
+.gc-sys.alert .gc-pill {
+    animation: gcAlert 1.2s ease-out 1;
+}
+
+@keyframes gcAlert {
+    0% {
+        box-shadow: inset 0 0 0 1px rgba(224, 96, 90, .35), 0 0 0 0 rgba(224, 96, 90, .5);
+    }
+
+    100% {
+        box-shadow: inset 0 0 0 1px rgba(224, 96, 90, .35), 0 0 0 10px rgba(224, 96, 90, 0);
+    }
+}
+
+.gc-ai .chat-cards {
+    margin-top: 10px;
+}

@@ -1,0 +1,616 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (C) 2026 Athokpam Yaraba Luwang
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/* Hide the app until the person has a username and a project (class is set in <head>) */
+.gated .app {
+    visibility: hidden;
+}
+
+/* Flow layout: the card centres itself when there is room and the page scrolls when there is not (phones) */
+.gate {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 24px;
+    overflow-y: auto;
+    background: var(--bg);
+    color: var(--text);
+    transition: opacity .4s var(--ease, ease), transform .4s var(--ease, ease);
+}
+
+.gate.out {
+    opacity: 0;
+    transform: scale(1.015);
+    pointer-events: none;
+}
+
+.gate[hidden],
+.gate [hidden] {
+    display: none !important;
+}
+
+.gate-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 500px;
+    margin: auto 0;
+}
+
+/* Heartbeat: desktop only, and only on the first (username) screen */
+.gate-trace {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 56px;
+    width: 100%;
+    height: 110px;
+    pointer-events: none;
+}
+
+.gate-trace path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    opacity: .45;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: trace 2.6s .2s var(--ease, ease) forwards;
+}
+
+@keyframes trace {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@media (min-width: 900px) and (min-height: 720px) {
+    .gate[data-step="user"] .gate-trace {
+        display: block;
+    }
+}
+
+.gate-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: rise .45s ease-out both;
+}
+
+.gate-logo {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    border-radius: 18px;
+    margin-bottom: 20px;
+}
+
+.gate-step h1 {
+    font-size: clamp(26px, 5vw, 34px);
+    line-height: 1.2;
+    letter-spacing: -.3px;
+}
+
+.gate-sub {
+    margin-top: 10px;
+    max-width: 38ch;
+    color: var(--muted);
+    font-size: 1.02rem;
+}
+
+#g-form {
+    width: 100%;
+    margin-top: 28px;
+}
+
+/* ---------- Event lockup (Bharat Builds x AWS) ---------- */
+.gate-event {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.ev-logos {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Logos sit on white pills so the dark "aws" wordmark stays readable in every theme */
+.ev-logo {
+    display: grid;
+    place-items: center;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+}
+
+.ev-logo img {
+    display: block;
+    height: 24px;
+    width: auto;
+    max-width: 130px;
+    object-fit: contain;
+}
+
+.ev-x {
+    color: var(--muted);
+    font-size: 1.2rem;
+}
+
+.gate-event p {
+    color: var(--muted);
+    font-size: .95rem;
+}
+
+/* ---------- Username step ---------- */
+.gate-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.gate-field:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--soft), var(--shadow);
+}
+
+.gate-field .at {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.gate-field input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 12px 0;
+    font-size: 1.35rem;
+    letter-spacing: .2px;
+}
+
+.gate-field input::placeholder {
+    color: var(--muted);
+    opacity: .6;
+}
+
+.gate-status {
+    min-height: 1.6em;
+    margin: 10px 4px 0;
+    font-size: .92rem;
+    color: var(--muted);
+    text-align: left;
+}
+
+.gate-status[data-k="ok"] {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.gate-status[data-k="bad"] {
+    color: #e0605a;
+}
+
+.gate-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 13px 20px;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    transition: background .2s, opacity .2s, transform .15s;
+}
+
+@media (hover: hover) {
+    .gate-btn:hover:not(:disabled) {
+        background: var(--accent-h);
+    }
+}
+
+.gate-btn:active:not(:disabled) {
+    transform: scale(.98);
+}
+
+.gate-btn:disabled {
+    opacity: .4;
+    cursor: default;
+}
+
+.gate-link {
+    margin-top: 18px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: .95rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color .2s;
+}
+
+@media (hover: hover) {
+    .gate-link:hover {
+        color: var(--accent);
+    }
+}
+
+.gate-foot {
+    position: relative;
+    z-index: 1;
+    margin-top: 28px;
+    text-align: center;
+    font-size: .82rem;
+    color: var(--muted);
+}
+
+/* ---------- Project picker ---------- */
+.pgrid {
+    width: 100%;
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    text-align: left;
+}
+
+.pico {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--soft);
+    color: var(--accent);
+}
+
+.pico svg {
+    width: 22px;
+    height: 22px;
+}
+
+.pdesc {
+    display: block;
+    color: var(--muted);
+    font-size: .92rem;
+    line-height: 1.4;
+}
+
+/* Live project: one solid, featured card */
+.pfarm {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 20px;
+    border: 1.5px solid var(--accent);
+    background: var(--soft);
+    box-shadow: var(--shadow);
+    text-align: left;
+    transition: transform .15s, background .2s;
+}
+
+.pfarm .pico {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.pfarm .pico svg {
+    width: 28px;
+    height: 28px;
+}
+
+.pfarm .pbody {
+    flex: 1;
+    min-width: 0;
+}
+
+.pfarm b {
+    display: block;
+    font-size: 1.35rem;
+    line-height: 1.2;
+    margin: 2px 0 4px;
+}
+
+.pstate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.pstate i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: bounce 1.6s infinite ease-in-out;
+}
+
+.pgo {
+    flex-shrink: 0;
+    padding: 8px 18px;
+    border-radius: 99px;
+    font-weight: 700;
+    background: var(--accent);
+    color: var(--on-accent);
+    transition: background .2s;
+}
+
+@media (hover: hover) {
+    .pfarm:hover {
+        transform: translateY(-2px);
+    }
+
+    .pfarm:hover .pgo {
+        background: var(--accent-h);
+    }
+}
+
+/* Roadmap projects: dashed = not plugged in yet */
+.ptile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1.5px dashed var(--border);
+    background: transparent;
+    text-align: left;
+    transition: border-color .2s, background .2s;
+}
+
+.ptile b {
+    font-size: 1.05rem;
+    line-height: 1.25;
+}
+
+.ptile .pico {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 4px;
+    color: var(--muted);
+}
+
+.ptile .pico svg {
+    width: 20px;
+    height: 20px;
+}
+
+.ptag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 1px 9px;
+    border-radius: 99px;
+    font-size: .76rem;
+    font-weight: 700;
+    background: var(--soft);
+    color: var(--accent);
+}
+
+.ptile.padd {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+}
+
+.ptile.padd .pico {
+    margin: 0;
+    color: var(--accent);
+}
+
+.ptile.padd .pbody {
+    min-width: 0;
+}
+
+@media (hover: hover) {
+    .ptile:hover {
+        border-color: var(--accent);
+        background: var(--soft);
+    }
+}
+
+@media (max-width: 480px) {
+    .pgo {
+        display: none;
+    }
+
+    .pfarm {
+        padding: 16px;
+        gap: 14px;
+    }
+}
+
+/* ---------- Note for the judges ---------- */
+.g-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 210;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, .35);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    animation: fadein .2s ease-out both;
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+}
+
+.g-dialog-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 26px;
+    border-radius: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+    animation: pop .25s ease-out both;
+}
+
+.g-dialog-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.g-dialog-card p {
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+/* ---------- Sidebar user chip ---------- */
+.u-av {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.u-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- Inline shortcut hint inside the open sidebar's New chat / Search ---------- */
+.sc-hint {
+    margin-left: auto;
+    padding-left: 12px;
+    font: inherit;
+    font-size: .82rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s;
+}
+
+@media (hover: hover) {
+    .new-chat:hover .sc-hint {
+        opacity: .75;
+    }
+
+    .search:hover .sc-hint {
+        opacity: .7;
+    }
+
+    .search:focus-within .sc-hint {
+        opacity: 0;
+    }
+}
+
+@media (hover: none) {
+    .sc-hint {
+        display: none;
+    }
+}
+
+/* ---------- Theme step (named colours) ---------- */
+.tgroup {
+    width: 100%;
+    margin-top: 24px;
+    text-align: left;
+}
+
+.tlabel {
+    margin: 0 4px 8px;
+    color: var(--muted);
+    font-size: .92rem;
+    font-weight: 700;
+}
+
+.tgrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+@media (min-width: 520px) {
+    .tgrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.tchip {
+    /* Each chip carries its own data-theme, so var(--surface), var(--text) and var(--accent) here
+       resolve to THAT theme's colours: every chip is a live preview and its text always contrasts */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-align: left;
+    transition: box-shadow .2s, border-color .2s;
+}
+
+.tdot {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--soft);
+}
+
+.tname {
+    font-size: .95rem;
+    line-height: 1.25;
+}
+
+.tchip[aria-pressed="true"] {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+    font-weight: 700;
+}
+
+@media (hover: hover) {
+    .tchip:hover {
+        border-color: var(--accent);
+    }
+}

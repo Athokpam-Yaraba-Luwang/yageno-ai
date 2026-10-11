@@ -1,0 +1,616 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (C) 2026 Athokpam Yaraba Luwang
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/* ---------- Sidebar nav button (replaces the disabled "Actuators" item) ---------- */
+.nav-item[aria-pressed="true"] {
+    background: var(--soft);
+    color: var(--accent);
+}
+
+.nav-item.has-alert::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    margin-left: auto;
+    border-radius: 50%;
+    background: #e0605a;
+}
+
+/* ---------- Panel: phones = full-screen sheet sliding in from the right ---------- */
+.dev-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: 100%;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform .32s var(--ease, cubic-bezier(.4, 0, .2, 1)), visibility .32s;
+    will-change: transform;
+}
+
+.dev-panel.show {
+    transform: none;
+    visibility: visible;
+}
+
+.dev-top {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 56px;
+    padding: 0 12px 0 20px;
+    flex-shrink: 0;
+}
+
+.dev-title {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+#dev-close {
+    margin-left: 4px;
+}
+
+.dev-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    scrollbar-width: thin;
+}
+
+.dev-body>* {
+    max-width: 980px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ---------- Panel: desktop = a view inside the main area, no slide-in drawer ---------- */
+@media (min-width: 900px) {
+    .dev-panel {
+        left: var(--sw);
+        right: 0;
+        width: auto;
+        z-index: 25;
+        transform: none;
+        opacity: 0;
+        transition: opacity .25s, visibility .25s, left .32s var(--ease, cubic-bezier(.4, 0, .2, 1));
+    }
+
+    .dev-panel.show {
+        opacity: 1;
+    }
+}
+
+/* ---------- Status line ---------- */
+.dev-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: .95rem;
+}
+
+.dev-dot {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: .6;
+}
+
+.dev-status[data-k="on"] {
+    color: var(--text);
+}
+
+.dev-status[data-k="on"] .dev-dot {
+    background: var(--accent);
+    opacity: 1;
+    animation: bounce 1.6s infinite ease-in-out;
+}
+
+/* ---------- Groups and cards ---------- */
+.dev-group {
+    margin-top: 18px;
+}
+
+.dev-group-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 4px 8px;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: .92rem;
+}
+
+.dev-group-title em {
+    font-style: normal;
+    font-weight: 400;
+    font-size: .82rem;
+}
+
+.dev-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (min-width: 640px) {
+    .dev-grid {
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    }
+}
+
+.dev-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+    transition: border-color .25s, background .25s, opacity .25s;
+}
+
+.dev-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: .9rem;
+}
+
+.dev-ic {
+    display: grid;
+    color: var(--accent);
+}
+
+.dev-ic svg {
+    width: 18px;
+    height: 18px;
+}
+
+.dev-val-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.dev-val {
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.dev-unit {
+    color: var(--muted);
+    font-size: .95rem;
+}
+
+.dev-text {
+    color: var(--muted);
+    font-size: .88rem;
+    line-height: 1.35;
+}
+
+.dev-extra {
+    color: var(--muted);
+    font-size: .78rem;
+    opacity: .8;
+}
+
+/* card states */
+.dev-card.act {
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.dev-card.act:active {
+    transform: scale(.985);
+}
+
+.dev-card.act .dev-card-head::after {
+    content: '';
+    margin-left: auto;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(-45deg);
+    opacity: .55;
+}
+
+.dev-card.on {
+    border-color: var(--accent);
+    background: linear-gradient(var(--soft), var(--soft)), var(--surface);
+}
+
+.dev-card.on .dev-val {
+    color: var(--accent);
+}
+
+.dev-card.warn {
+    border-color: #e0605a;
+    background: linear-gradient(rgba(224, 96, 90, .10), rgba(224, 96, 90, .10)), var(--surface);
+}
+
+.dev-card.warn .dev-val,
+.dev-card.warn .dev-ic {
+    color: #d1453f;
+}
+
+[data-theme^="dark"] .dev-card.warn .dev-val,
+[data-theme^="dark"] .dev-card.warn .dev-ic {
+    color: #ff8f88;
+}
+
+.dev-card.stale {
+    opacity: .55;
+}
+
+.dev-card.flash {
+    animation: devflash .9s ease-out;
+}
+
+@keyframes devflash {
+    0% {
+        box-shadow: 0 0 0 0 var(--accent);
+    }
+
+    40% {
+        box-shadow: 0 0 0 4px var(--soft);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+@media (hover: hover) {
+    .dev-card.act:hover {
+        border-color: var(--accent);
+    }
+}
+
+.dev-status {
+    width: fit-content;
+    max-width: 100%;
+    padding: 6px 10px;
+    margin-left: -10px;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.dev-info {
+    display: grid;
+    opacity: .7;
+}
+
+.dev-info svg {
+    width: 17px;
+    height: 17px;
+}
+
+@media (hover: hover) {
+    .dev-status:hover {
+        background: var(--soft);
+    }
+}
+
+/* ---------- Add device: one row like a list item ---------- */
+.dev-add {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    margin-top: 22px;
+    padding: 14px 16px;
+    border: 1.5px dashed var(--border);
+    border-radius: 18px;
+    background: transparent;
+    text-align: left;
+    transition: border-color .2s, background .2s;
+}
+
+.dev-add-ic {
+    flex-shrink: 0;
+}
+
+.dev-add-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.dev-add-chev {
+    display: grid;
+    color: var(--muted);
+}
+
+.dev-add-chev svg {
+    width: 18px;
+    height: 18px;
+}
+
+.dev-add b {
+    display: block;
+}
+
+.dev-add small {
+    display: block;
+    color: var(--muted);
+    font-size: .88rem;
+}
+
+.dev-add-ic {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: var(--soft);
+    color: var(--accent);
+}
+
+@media (hover: hover) {
+    .dev-add:hover {
+        border-color: var(--accent);
+        background: var(--soft);
+    }
+}
+
+/* ---------- Popups: on the page, so they also open from a chat card ---------- */
+.dev-pop {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, .35);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    animation: devfade .2s ease-out both;
+}
+
+@keyframes devfade {
+    from {
+        opacity: 0;
+    }
+}
+
+.dev-pop-card {
+    width: 100%;
+    max-width: 420px;
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 22px;
+    border-radius: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+    animation: pop .25s ease-out both;
+}
+
+.dev-pop-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+}
+
+.dev-pop-text {
+    color: var(--muted);
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+}
+
+.dev-pop-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.dev-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.dev-btn {
+    padding: 10px 20px;
+    border-radius: 99px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: background .2s, opacity .2s;
+}
+
+@media (hover: hover) {
+    .dev-btn:hover {
+        background: var(--soft);
+    }
+}
+
+.dev-btn.solid {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: transparent;
+}
+
+@media (hover: hover) {
+    .dev-btn.solid:hover {
+        background: var(--accent-h);
+    }
+}
+
+.dev-btn.danger {
+    background: #e0443e;
+    color: #fff;
+    border-color: transparent;
+}
+
+@media (hover: hover) {
+    .dev-btn.danger:hover {
+        background: #c93832;
+    }
+}
+
+.dev-code {
+    margin-top: 6px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--code);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .78rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ---------- Servo dial ---------- */
+.dial {
+    display: block;
+    width: 100%;
+    max-width: 340px;
+    margin: 4px auto 0;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dial-track {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 14;
+    stroke-linecap: round;
+}
+
+.dial-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 14;
+    stroke-linecap: round;
+}
+
+.dial-needle {
+    stroke: var(--text);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.dial-hub {
+    fill: var(--text);
+}
+
+.dial-handle {
+    fill: var(--surface);
+    stroke: var(--accent);
+    stroke-width: 4;
+    cursor: grab;
+}
+
+.dial text {
+    fill: var(--muted);
+    font-size: 12px;
+    text-anchor: middle;
+}
+
+.dial-read {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    margin: 2px 0 8px;
+    color: var(--muted);
+}
+
+.dial-read b {
+    font-size: 1.9rem;
+    color: var(--text);
+}
+
+/* ---------- Popup extras ---------- */
+.dev-pop-text.strong {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.dev-pop-text.note {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--soft);
+    color: var(--text);
+    font-size: .92rem;
+}
+
+.dev-steps {
+    margin: 0 0 10px;
+    padding-left: 1.3em;
+    color: var(--muted);
+}
+
+.dev-steps li {
+    margin: 4px 0;
+}
+
+/* ---------- Live control cards inside chats (personal chat and farm chat) ---------- */
+.chat-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+    max-width: 380px;
+    margin: 12px 0 4px;
+}
+
+.chat-cards .dev-card {
+    animation: rise .3s ease-out both;
+}
+
+.chat-done {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 2px;
+}
+
+.chat-done span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: .8rem;
+    background: var(--soft);
+    color: var(--text);
+}
+
+.chat-done span.fail {
+    background: rgba(224, 96, 90, .12);
+}
+
+.chat-done svg {
+    width: 14px;
+    height: 14px;
+    color: var(--accent);
+}
+
+.chat-done span.fail svg {
+    color: #e0605a;
+}

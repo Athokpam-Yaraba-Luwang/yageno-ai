@@ -1,0 +1,191 @@
+<!--
+SPDX-FileCopyrightText: Copyright (C) 2026 Athokpam Yaraba Luwang
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<!doctype html>
+<html lang="en" data-theme="green">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>if (!location.pathname.endsWith('/')) location.replace(location.pathname + '/' + location.search + location.hash);</script>
+    <title>Yageno AI Cloud</title>
+    <link rel="icon" type="image/x-icon" href="static/favicon.ico" />
+    <script>try { var t = localStorage.getItem('yageno-theme'); t = { yellow: 'wood', dark: 'dark-blue' }[t] || t; if (t) document.documentElement.dataset.theme = t; } catch (e) { }</script>
+    <script>try { if (!localStorage.getItem('yageno-user') || !localStorage.getItem('yageno-project')) document.documentElement.classList.add('gated'); } catch (e) { }</script>
+    <link rel="stylesheet" href="static/style.css?v=12" />
+    <link rel="stylesheet" href="static/gate.css?v=4" />
+    <link rel="stylesheet" href="static/devices.css?v=3" />
+    <link rel="stylesheet" href="static/gc.css?v=2" />
+</head>
+
+<body>
+    <div class="app" id="app">
+        <div class="backdrop" id="backdrop"></div>
+
+        <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+            <div class="sb-head">
+                <div class="brand">
+                    <img class="logo" src="static/logo.webp" alt="Yageno AI" onerror="this.style.visibility='hidden'" />
+                    <span class="brand-text">Yageno AI</span>
+                </div>
+                <button class="icon-btn" id="sidebar-toggle" aria-label="Toggle sidebar" data-sc="sidebar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+                        <path d="M9 4v16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="rail-tools">
+                <button class="icon-btn" id="rail-search" data-ic="search" aria-label="Search chats"
+                    data-sc="search"></button>
+                <button class="icon-btn" id="rail-pin" data-ic="pin" aria-label="Pinned chats"
+                    title="Pinned chats"></button>
+            </div>
+
+            <div class="sb-body">
+                <button class="new-chat" id="new-chat" data-sc="new">
+                    <span class="ic" data-ic="newchat"></span>
+                    New chat
+                    <kbd class="sc-hint" data-sck="new"></kbd>
+                </button>
+                <div class="search" id="sb-search" data-sc="search"><span data-ic="search"></span><input
+                        id="chat-search" placeholder="Search chats" autocomplete="off" /><kbd class="sc-hint"
+                        data-sck="search"></kbd></div>
+                <div class="sb-label">Recent</div>
+                <ul class="chat-list" id="chat-list"></ul>
+                <p class="chat-empty" id="search-empty" hidden>No chats found</p>
+            </div>
+
+            <div class="sb-foot">
+                <button class="nav-item" id="gc-btn" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"></svg>
+                    <span class="nav-text">Farm chat</span>
+                </button>
+                <button class="nav-item" id="devices-btn" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"></svg>
+                    <span class="nav-text">Devices</span>
+                </button>
+                <div class="settings" id="settings" hidden>
+                    <p class="settings-title">Theme</p>
+                    <div class="swatches" id="swatches"></div>
+                </div>
+                <button class="nav-item" id="settings-toggle" aria-expanded="false" aria-controls="settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z">
+                        </path>
+                    </svg>
+                    <span class="nav-text">Settings</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main is-empty" id="main">
+            <header class="topbar">
+                <button class="icon-btn" id="sidebar-open" aria-label="Open sidebar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M4 7h16M4 12h16M4 17h10"></path>
+                    </svg>
+                </button>
+                <button class="model-top" id="model-btn-top" data-pos="down" aria-haspopup="true" aria-expanded="false">
+                    Yageno <span class="muted" id="top-label">Flash</span>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                </button>
+                <span class="temp-badge" id="temp-badge">Temporary chat</span>
+                <button class="icon-btn" id="temp-btn" data-ic="temp" aria-pressed="false" aria-label="Temporary chat"
+                    data-sc="temp"></button>
+                <button class="icon-btn" id="new-chat-top" data-ic="newchat" aria-label="New chat"
+                    data-sc="new"></button>
+                <button class="icon-btn" id="more-btn" data-ic="more" aria-label="Chat options"
+                    title="Chat options"></button>
+            </header>
+
+            <div class="stage">
+                <section id="chat-scroll">
+                    <div id="empty-chat-container">
+                        <img class="logo big" src="static/logo.webp" alt="" onerror="this.style.display='none'" />
+                        <h1>Yageno AI is watching the farm.</h1>
+                        <p class="sub">Ask about hazards, sensors, or history.</p>
+                        <div class="chips">
+                            <button class="chip">How is soil moisture right now?</button>
+                            <button class="chip">Any heat hazards today?</button>
+                            <button class="chip">Show water usage this week</button>
+                        </div>
+                    </div>
+                    <div id="messages"></div>
+                </section>
+
+                <div class="composer-wrap" id="composer-wrap">
+                    <div class="composer">
+                        <textarea id="user-input" rows="1" enterkeyhint="enter"
+                            placeholder="Message Yageno AI..."></textarea>
+                        <button class="model-pill" id="model-btn" data-pos="up" aria-haspopup="true"
+                            aria-expanded="false" data-sc="model">
+                            <span id="pill-label">Flash</span>
+                            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6"></path>
+                            </svg>
+                        </button>
+                        <button id="send-button" aria-label="Send"></button>
+                    </div>
+                    <p class="disclaimer">Yageno AI can make mistakes. Double-check readings before acting on them.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="model-menu" id="model-menu" role="menu">
+        <button role="menuitemradio" data-m="flash" aria-checked="true">
+            <svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.5 10 17.5 19 7.5"></path>
+            </svg>
+            <span><b>Yageno Flash</b><small>Fastest answers</small></span>
+        </button>
+        <button role="menuitemradio" data-m="thinking" aria-checked="false">
+            <svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.5 10 17.5 19 7.5"></path>
+            </svg>
+            <span><b>Yageno Thinking</b><small>Reasons step by step</small></span>
+        </button>
+    </div>
+
+    <div class="modal" id="modal" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h2 id="modal-title"></h2>
+            <p id="modal-text"></p>
+            <input id="modal-input" maxlength="60" autocomplete="off" />
+            <div class="modal-actions">
+                <button class="btn-ghost" id="modal-cancel">Cancel</button>
+                <button class="btn-solid" id="modal-ok"></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" role="status"></div>
+
+    <div id="error-banner" style="display: none" role="alert">
+        <p id="error-message"></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.js"></script>
+    <script src="static/gate.js?v=4"></script>
+    <script src="static/app.js?v=14"></script>
+    <script src="static/devices.js?v=3"></script>
+    <script src="static/globalchat.js?v=2"></script>
+</body>
+
+</html>
