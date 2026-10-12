@@ -1,0 +1,599 @@
+<!--
+SPDX-FileCopyrightText: Copyright (C) 2026 Athokpam Yaraba Luwang
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<!doctype html>
+<html lang="en" data-theme="green">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Yageno AI Admin</title>
+    <script>
+        /* The site's own theme, fonts and logo live under static/. Work out the prefix API Gateway puts in front. */
+        var BASE = location.pathname.replace(/\/admin\/?$/, "");
+        try { var t = localStorage.getItem("yageno-theme"); t = { yellow: "wood", dark: "dark-blue" }[t] || t; if (t) document.documentElement.dataset.theme = t; } catch (e) { }
+        document.write('<link rel="icon" href="' + BASE + '/static/favicon.ico">' +
+            '<link rel="stylesheet" href="' + BASE + '/static/style.css?v=12">');
+    </script>
+    <style>
+        body {
+            height: auto;
+            min-height: 100%;
+        }
+
+        .ad-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 22px 18px 64px;
+        }
+
+        /* top bar */
+        .ad-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 26px;
+        }
+
+        .ad-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .ad-brand img {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .ad-tag {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--soft);
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+        .ad-grow {
+            flex: 1;
+        }
+
+        .ad-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            color: var(--text);
+            transition: background .2s, border-color .2s;
+        }
+
+        .ad-btn:hover {
+            border-color: var(--accent);
+            background: var(--soft);
+        }
+
+        .ad-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--on-accent, #fff);
+            font-weight: 700;
+        }
+
+        .ad-btn.primary:hover {
+            background: var(--accent-h);
+        }
+
+        /* login */
+        .ad-login {
+            max-width: 400px;
+            margin: 14vh auto 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 30px 28px 26px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .ad-login .ad-brand {
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .ad-login h1 {
+            font-size: 24px;
+            margin: 8px 0 2px;
+        }
+
+        .ad-login p {
+            color: var(--muted);
+            margin-bottom: 18px;
+        }
+
+        .ad-login label {
+            display: block;
+            text-align: left;
+            font-size: 14px;
+            color: var(--muted);
+            margin: 12px 0 5px;
+        }
+
+        .ad-field {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .ad-login .ad-btn {
+            width: 100%;
+            margin-top: 18px;
+            padding: 11px;
+        }
+
+        .ad-err {
+            color: #c0392b;
+            min-height: 1.5em;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        [data-theme^="dark"] .ad-err {
+            color: #ff8a7a;
+        }
+
+        /* stats */
+        .ad-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .ad-stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+
+        .ad-stat b {
+            display: block;
+            font-size: 28px;
+            line-height: 1.1;
+            color: var(--accent);
+        }
+
+        .ad-stat span {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* search */
+        .ad-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .ad-search .ad-field {
+            flex: 1;
+        }
+
+        /* users */
+        .ad-user {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .ad-user.open {
+            border-color: var(--accent);
+            box-shadow: var(--shadow);
+        }
+
+        .ad-head {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        .ad-head:hover {
+            background: var(--soft);
+        }
+
+        .ad-av {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            flex: none;
+            display: grid;
+            place-items: center;
+            background: var(--soft);
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .ad-av.on::after {
+            content: "";
+            position: absolute;
+            right: -1px;
+            bottom: -1px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #22b573;
+            border: 2px solid var(--surface);
+        }
+
+        .ad-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .ad-name {
+            font-weight: 700;
+            font-size: 18px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ad-meta {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .ad-meta span {
+            display: inline-block;
+            margin-right: 14px;
+        }
+
+        .ad-chev {
+            color: var(--muted);
+            transition: transform .25s;
+        }
+
+        .ad-user.open .ad-chev {
+            transform: rotate(90deg);
+            color: var(--accent);
+        }
+
+        .ad-body {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows .3s ease;
+        }
+
+        .ad-user.open .ad-body {
+            grid-template-rows: 1fr;
+        }
+
+        .ad-body>div {
+            overflow: hidden;
+        }
+
+        .ad-inner {
+            padding: 4px 18px 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ad-h {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin: 18px 0 8px;
+        }
+
+        .ad-tl {
+            list-style: none;
+            position: relative;
+            margin-left: 5px;
+            padding-left: 18px;
+            border-left: 2px solid var(--border);
+        }
+
+        .ad-tl li {
+            position: relative;
+            padding: 4px 0 10px;
+        }
+
+        .ad-tl li::before {
+            content: "";
+            position: absolute;
+            left: -25px;
+            top: 11px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--surface);
+        }
+
+        .ad-tl li.reg::before {
+            background: var(--surface);
+            border-color: var(--accent);
+        }
+
+        .ad-tl small {
+            color: var(--muted);
+        }
+
+        .ad-chat {
+            margin-bottom: 14px;
+        }
+
+        .ad-chat h4 {
+            font-size: 16px;
+        }
+
+        .ad-chat time {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .ad-q {
+            background: var(--user);
+            border-radius: 12px;
+            padding: 9px 13px;
+            margin-bottom: 7px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .ad-empty {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .ad-note {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 22px;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 560px) {
+            .ad-stats {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 8px;
+            }
+
+            .ad-stat {
+                padding: 10px 12px;
+            }
+
+            .ad-stat b {
+                font-size: 22px;
+            }
+
+            .ad-meta span {
+                display: block;
+                margin: 0;
+            }
+
+            .ad-top .ad-tag {
+                display: none;
+            }
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ad-wrap">
+        <form id="login" class="ad-login">
+            <div class="ad-brand"><img id="logo1" alt=""><span>Yageno AI</span></div>
+            <h1>Admin</h1>
+            <p>Sign in to see registered users.</p>
+            <label for="u">Username</label>
+            <input class="ad-field" id="u" autocomplete="username" required>
+            <label for="p">Password</label>
+            <input class="ad-field" id="p" type="password" autocomplete="current-password" required>
+            <button class="ad-btn primary" type="submit">Sign in</button>
+            <div class="ad-err" id="err" role="alert"></div>
+        </form>
+
+        <div id="app" hidden>
+            <div class="ad-top">
+                <div class="ad-brand"><img id="logo2" alt=""><span>Yageno AI</span></div>
+                <span class="ad-tag">Admin</span>
+                <span class="ad-grow"></span>
+                <button class="ad-btn" id="refresh" type="button">Refresh</button>
+                <button class="ad-btn" id="out" type="button">Sign out</button>
+            </div>
+
+            <div class="ad-stats">
+                <div class="ad-stat"><b id="s-users">0</b><span>Registered</span></div>
+                <div class="ad-stat"><b id="s-online">0</b><span>Online now</span></div>
+                <div class="ad-stat"><b id="s-new">0</b><span>New today</span></div>
+            </div>
+
+            <div class="ad-search"><input class="ad-field" id="q" type="search" placeholder="Search username"
+                    aria-label="Search username"></div>
+            <div id="list"></div>
+
+            <p class="ad-note">Times are in IST. Online history is recorded from the day this page was added; earlier
+                activity was not tracked.
+                A visit ends after 30 minutes without activity. Only users' own prompts are shown, not replies or device
+                actions.</p>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var token = "";
+            try { token = sessionStorage.getItem("yadmin") || ""; } catch (e) { }
+            var users = [];
+            var $ = function (id) { return document.getElementById(id); };
+            ["logo1", "logo2"].forEach(function (id) {
+                var im = $(id); im.onerror = function () { im.style.display = "none"; }; im.src = BASE + "/static/logo.webp";
+            });
+
+            var FMT = { timeZone: "Asia/Kolkata", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true };
+            function when(v) {
+                var d = new Date(v);
+                return isNaN(d) ? "unknown" : d.toLocaleString("en-IN", FMT).replace(" at ", ", ");
+            }
+            function dayKey(v) { return new Date(v).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); }
+            function el(tag, cls, text) {
+                var n = document.createElement(tag);
+                if (cls) n.className = cls;
+                if (text !== undefined) n.textContent = text;
+                return n;
+            }
+            function api(path) {
+                return fetch(BASE + path, { headers: { "X-Admin-Auth": token } }).then(function (r) {
+                    if (r.status === 401 || r.status === 404) throw new Error("auth");
+                    if (!r.ok) throw new Error("HTTP " + r.status);
+                    return r.json();
+                });
+            }
+            function show(inApp) { $("login").hidden = inApp; $("app").hidden = !inApp; }
+            function span(m) {
+                m = Math.max(0, Math.round(m / 60000));
+                if (m < 1) return "under a minute";
+                if (m < 60) return m + " min";
+                return Math.floor(m / 60) + " h " + (m % 60) + " min";
+            }
+            function tl(label, text, cls) {
+                var li = el("li", cls);
+                li.appendChild(el("span", null, label));
+                li.appendChild(el("small", null, "  ·  " + text));
+                return li;
+            }
+
+            function fill(body, u, d) {
+                body.textContent = "";
+                body.appendChild(el("div", "ad-h", "Online history"));
+                var ul = el("ul", "ad-tl");
+                (d.visits || []).forEach(function (v) {
+                    ul.appendChild(tl("Online " + when(v.start), "for " + span(v.end - v.start)));
+                });
+                ul.appendChild(tl("Registered " + when(u.createdAt), "first sign-up", "reg"));
+                body.appendChild(ul);
+                if (!(d.visits || []).length) body.insertBefore(el("div", "ad-empty", "No visits recorded yet."), ul);
+
+                body.appendChild(el("div", "ad-h", "Prompts"));
+                var any = false;
+                (d.chats || []).forEach(function (c) {
+                    if (!c.prompts.length) return;
+                    any = true;
+                    var box = el("div", "ad-chat");
+                    box.appendChild(el("h4", null, c.title || "Untitled chat"));
+                    box.appendChild(el("time", null, "Last updated " + when(c.updatedAt)));
+                    c.prompts.forEach(function (p) { box.appendChild(el("div", "ad-q", p)); });
+                    body.appendChild(box);
+                });
+                if ((d.farm || []).length) {
+                    any = true;
+                    var fb = el("div", "ad-chat");
+                    fb.appendChild(el("h4", null, "Shared Farm chat"));
+                    d.farm.forEach(function (m) {
+                        fb.appendChild(el("time", null, when(m.ts)));
+                        fb.appendChild(el("div", "ad-q", m.text));
+                    });
+                    body.appendChild(fb);
+                }
+                if (!any) body.appendChild(el("div", "ad-empty", "No prompts yet."));
+            }
+
+            function card(u) {
+                var online = u.lastSeen && Date.now() - u.lastSeen < 2 * 60000;
+                var c = el("div", "ad-user");
+                var head = el("button", "ad-head"); head.type = "button";
+                head.appendChild(el("div", "ad-av" + (online ? " on" : ""), u.name.charAt(0)));
+                var info = el("div", "ad-info");
+                info.appendChild(el("div", "ad-name", u.name));
+                var meta = el("div", "ad-meta");
+                meta.appendChild(el("span", null, "Registered " + when(u.createdAt)));
+                meta.appendChild(el("span", null, online ? "Online now" : (u.lastSeen ? "Last online " + when(u.lastSeen) : "No online history yet")));
+                info.appendChild(meta);
+                head.appendChild(info);
+                head.appendChild(el("span", "ad-chev", "›"));
+                var wrap = el("div", "ad-body"), clip = el("div"), body = el("div", "ad-inner");
+                clip.appendChild(body); wrap.appendChild(clip);
+                var loaded = false;
+                head.addEventListener("click", function () {
+                    c.classList.toggle("open");
+                    if (loaded || !c.classList.contains("open")) return;
+                    loaded = true;
+                    body.appendChild(el("div", "ad-empty", "Loading…"));
+                    api("/api/admin/users/" + encodeURIComponent(u.name)).then(function (d) { fill(body, u, d); })
+                        .catch(function (e) {
+                            loaded = false; body.textContent = "";
+                            body.appendChild(el("div", "ad-err", e.message === "auth" ? "Session expired. Sign in again." : "Could not load (" + e.message + ")."));
+                        });
+                });
+                c.appendChild(head); c.appendChild(wrap);
+                return c;
+            }
+
+            function render() {
+                var q = $("q").value.trim().toLowerCase();
+                var list = $("list"); list.textContent = "";
+                var shown = users.filter(function (u) { return !q || u.name.toLowerCase().indexOf(q) !== -1; });
+                shown.forEach(function (u) { list.appendChild(card(u)); });
+                if (!shown.length) list.appendChild(el("div", "ad-empty", users.length ? "No user matches." : "No users yet."));
+            }
+
+            function load() {
+                api("/api/admin/users").then(function (d) {
+                    users = d.users;
+                    var today = dayKey(Date.now());
+                    $("s-users").textContent = users.length;
+                    $("s-online").textContent = users.filter(function (u) { return u.lastSeen && Date.now() - u.lastSeen < 2 * 60000; }).length;
+                    $("s-new").textContent = users.filter(function (u) { return u.createdAt && dayKey(u.createdAt) === today; }).length;
+                    show(true); render();
+                }).catch(function (e) {
+                    token = ""; try { sessionStorage.removeItem("yadmin"); } catch (x) { }
+                    show(false);
+                    $("err").textContent = e.message === "auth" ? "Wrong username or password." : "Could not load (" + e.message + ").";
+                });
+            }
+
+            $("login").addEventListener("submit", function (ev) {
+                ev.preventDefault(); $("err").textContent = "";
+                token = btoa(unescape(encodeURIComponent($("u").value + ":" + $("p").value)));
+                try { sessionStorage.setItem("yadmin", token); } catch (e) { }
+                $("p").value = ""; load();
+            });
+            $("q").addEventListener("input", render);
+            $("refresh").addEventListener("click", load);
+            $("out").addEventListener("click", function () {
+                token = ""; try { sessionStorage.removeItem("yadmin"); } catch (e) { }
+                users = []; $("list").textContent = ""; show(false);
+            });
+            if (token) load();
+        })();
+    </script>
+</body>
+
+</html>

@@ -7,6 +7,8 @@ import json
 import uuid
 import time
 import hmac
+import base64
+import asyncio
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
@@ -15,7 +17,7 @@ import botocore.exceptions
 import uvicorn
 from boto3.dynamodb.conditions import Attr, Key
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
@@ -113,6 +115,45 @@ def user_exists(name):
     return 'Item' in chat_table.get_item(Key={'sessionId': user_key(name)})
 
 
+# ---------- online history (for the admin page) ----------
+#   USER# item:   lastSeen (ms), visitStart (ms)
+#   YagenoStream: pk = visit#<name>, ts = visit start, end = last activity in that visit
+_TOUCH = {}
+TOUCH_EVERY_MS = 60_000
+VISIT_GAP_MS = 30 * 60_000     # 30 minutes of silence starts a new visit
+
+
+def touch_user(user):
+    """Record that this user is active. Cheap: at most one DynamoDB write per user per minute per container."""
+    now = now_ms()
+    if now - _TOUCH.get(user, 0) < TOUCH_EVERY_MS:
+        return
+    _TOUCH[user] = now
+    try:
+        it = chat_table.get_item(Key={'sessionId': user_key(user)}).get('Item')
+        if not it:
+            return
+        last = int(it.get('lastSeen', 0))
+        start = int(it.get('visitStart', 0))
+        exp = int(time.time()) + KEEP_SECONDS
+        if not start or now - last > VISIT_GAP_MS:
+            start = stream_put(f"visit#{user}", {'end': now, 'exp': exp}, ts=now)
+        else:
+            stream_table.update_item(
+                Key={'pk': f"visit#{user}", 'ts': start},
+                UpdateExpression="SET #e = :e, exp = :x",
+                ExpressionAttributeNames={'#e': 'end'},
+                ExpressionAttributeValues={':e': now, ':x': exp},
+            )
+        chat_table.update_item(
+            Key={'sessionId': user_key(user)},
+            UpdateExpression="SET lastSeen = :l, visitStart = :v",
+            ExpressionAttributeValues={':l': now, ':v': start},
+        )
+    except Exception as e:
+        print(f"Touch error: {e}")
+
+
 @app.get("/")
 def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
@@ -159,6 +200,7 @@ async def login_username(request: Request):
     try:
         item = chat_table.get_item(Key={'sessionId': user_key(name)}).get('Item')
         if item:
+            touch_user(name)
             return {"status": "success", "username": name, "theme": item.get('theme')}
         return JSONResponse(status_code=404, content={"status": "not_found"})
     except Exception as e:
@@ -197,6 +239,7 @@ async def get_chats(request: Request):
     user = current_user(request)
     if not user:
         return unauthorized()
+    touch_user(user)
     try:
         items = []
         kwargs = {
@@ -1040,6 +1083,7 @@ async def chat_endpoint(request: Request):
     if not user:
         return unauthorized()
     project = current_project(request)
+    touch_user(user)
 
     data = await request.json()
     user_prompt = data.get("prompt", "")
@@ -1244,6 +1288,7 @@ async def global_feed(request: Request):
     user = current_user(request)
     if not user:
         return unauthorized()
+    touch_user(user)
     try:
         now = now_ms()
         try:
@@ -1425,11 +1470,93 @@ async def device_decide(request: Request):
         return JSONResponse(status_code=500, content={"status": "error"})
 
 
+# ===========================================================================
+# ADMIN  (/admin) : registered users, online history, prompts. Needs ADMIN_USER and ADMIN_PASS
+# set as Lambda environment variables; if either is empty the admin page is switched off.
+# ===========================================================================
+ADMIN_USER = os.environ.get("ADMIN_USER", "")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "")
+
+
+def admin_ok(request: Request):
+    if not ADMIN_USER or not ADMIN_PASS:
+        return False
+    raw = request.headers.get("x-admin-auth") or ""
+    if not raw:
+        h = request.headers.get("authorization") or ""
+        raw = h[6:] if h.lower().startswith("basic ") else ""
+    try:
+        user, _, pw = base64.b64decode(raw).decode("utf-8").partition(":")
+    except Exception:
+        return False
+    return hmac.compare_digest(user.encode(), ADMIN_USER.encode()) & hmac.compare_digest(pw.encode(), ADMIN_PASS.encode())
+
+
+async def admin_denied():
+    await asyncio.sleep(1)      # slow down password guessing
+    return JSONResponse(status_code=401, content={"status": "unauthorized"})
+
+
+@app.get("/admin")
+@app.get("/admin/")
+def admin_page():
+    if not ADMIN_USER or not ADMIN_PASS:
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+    with open(os.path.join(BASE_DIR, "templates", "admin.html"), encoding="utf-8") as f:
+        return HTMLResponse(f.read(), headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+
+
+@app.get("/api/admin/users")
+async def admin_users(request: Request):
+    if not admin_ok(request):
+        return await admin_denied()
+    users = []
+    kwargs = {"FilterExpression": Attr('sessionId').begins_with("USER#"),
+              "ProjectionExpression": "uname, createdAt, lastSeen"}
+    while True:
+        r = chat_table.scan(**kwargs)
+        users.extend(to_py(i) for i in r.get('Items', []))
+        if 'LastEvaluatedKey' not in r:
+            break
+        kwargs['ExclusiveStartKey'] = r['LastEvaluatedKey']
+    out = [{"name": u.get("uname", ""), "createdAt": u.get("createdAt", ""), "lastSeen": u.get("lastSeen", 0)} for u in users]
+    out.sort(key=lambda u: u["createdAt"], reverse=True)
+    return {"users": out}
+
+
+@app.get("/api/admin/users/{name}")
+async def admin_user_detail(name: str, request: Request):
+    if not admin_ok(request):
+        return await admin_denied()
+    name = name.strip().lower()
+    if not USERNAME_RE.match(name):
+        return JSONResponse(status_code=400, content={"status": "invalid"})
+    visits = [{"start": int(v["ts"]), "end": int(v.get("end", v["ts"]))}
+              for v in stream_query(f"visit#{name}", 0, now_ms() + 1000, desc=True, limit=100)]
+    chats, kwargs = [], {"FilterExpression": Attr('username').eq(name),
+                         "ProjectionExpression": "sessionId, title, updatedAt, messages"}
+    while True:
+        r = chat_table.scan(**kwargs)
+        for it in r.get('Items', []):
+            it = to_py(it)
+            prompts = [str(m.get("content", ""))[:2000] for m in it.get("messages", []) if m.get("role") == "user"]
+            chats.append({"title": it.get("title", ""), "updatedAt": it.get("updatedAt", ""), "prompts": prompts})
+        if 'LastEvaluatedKey' not in r:
+            break
+        kwargs['ExclusiveStartKey'] = r['LastEvaluatedKey']
+    chats.sort(key=lambda c: c["updatedAt"], reverse=True)
+    farm = [{"ts": int(m["ts"]), "text": str(m.get("text", ""))[:2000]}
+            for m in stream_query(CHAT, 0, now_ms() + 1000, desc=True, limit=5000)
+            if m.get("kind") == "user" and m.get("user") == name]
+    return {"visits": visits, "chats": chats, "farm": farm}
+
+
 # ---------------------------------------------------------------------------
 # API Gateway puts a prefix in front of every path (e.g. /default/First_Fastapi_webapp/api/chat).
 # This wrapper removes everything before the first "/api" or "/static" segment.
 # ---------------------------------------------------------------------------
 _PREFIX = re.compile(r'^(.*?)/(?:api|static)(?=/|$)')
+_ADMIN = re.compile(r'^(?:.*?)/admin/?$')
 
 
 class StripPrefix:
@@ -1439,6 +1566,12 @@ class StripPrefix:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             path = scope["path"]
+            if _ADMIN.match(path):           # .../admin  or  .../admin/  -> /admin
+                scope = dict(scope)
+                scope["path"] = "/admin"
+                scope["raw_path"] = b"/admin"
+                await self.inner(scope, receive, send)
+                return
             m = _PREFIX.match(path)
             base = m.group(1) if m else path.rstrip("/")
             if base and path.startswith(base):
